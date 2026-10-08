@@ -34,7 +34,20 @@ jobs:
 
       - run: npm ci
 
-      - run: npm run dist
+      - name: Build installer
+        shell: bash
+        run: |
+          set -o pipefail
+          npm run dist 2>&1 | tee build.log
+
+      # Job logs need a sign-in to read; annotations show on the run's summary page.
+      - name: Show why the build failed
+        if: failure()
+        shell: bash
+        run: |
+          [ -f build.log ] || exit 0
+          msg=$(tail -n 40 build.log | sed -e 's/\r//g' -e 's/%/%25/g' | awk '{ printf "%s%%0A", $0 }')
+          echo "::error title=npm run dist failed::$msg"
 
       - name: Keep the build (manual runs)
         if: "!startsWith(github.ref, 'refs/tags/')"
