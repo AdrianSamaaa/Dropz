@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'">
+  <title>Add apps</title>
+  <link rel="stylesheet" href="base.css">
+  <link rel="stylesheet" href="picker.css">
+</head>
+<body>
+  <header class="titlebar">
+    <img class="logo" src="../../assets/icon.png" alt="">
+    <span>Add apps to <b id="dropName" class="drop-name"></b></span>
+  </header>
+
+  <div class="toolbar">
+    <label class="search">
+      <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="7" cy="7" r="4.5"/><path d="m10.5 10.5 3 3"/></svg>
+      <input id="q" type="search" placeholder="Search your apps" autocomplete="off" spellcheck="false">
+    </label>
+    <div class="seg" id="seg">
+      <button data-f="all" class="on">All</button>
+      <button data-f="desktop">Desktop</button>
+      <button data-f="start">Start menu</button>
+    </div>
+  </div>
+
+  <main id="scroll">
+    <section id="secDesktop">
+      <h2>Apps on your desktop <span class="count"></span></h2>
+      <div class="grid"></div>
+    </section>
+    <section id="secStart">
+      <h2>Start menu <span class="count"></span></h2>
+      <div class="grid"></div>
+    </section>
+    <section id="secDesktopFiles">
+      <h2>Desktop files &amp; folders <span class="count"></span></h2>
+      <div class="grid"></div>
+    </section>
+    <p class="status" id="status">Looking for apps…</p>
+  </main>
+
+  <footer>
+    <label class="tidy" title="Removing an app from the Drop puts it back on the desktop.">
+      <input type="checkbox" id="tidy">
+      <span class="switch"></span>
+      <span class="txt"><b>Remove from desktop</b><small>Added apps leave your desktop and live in this Drop</small></span>
+    </label>
+    <div class="actions">
+      <button id="browse" class="btn ghost">Browse…</button>
+      <button id="add" class="btn primary" disabled>Add</button>
+    </div>
+  </footer>
+
+  <div class="toast" id="toast" hidden></div>
+  <script src="picker.js"></script>
+</body>
+</html>

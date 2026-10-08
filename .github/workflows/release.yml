@@ -1,0 +1,58 @@
+# Builds the Windows installer and portable zip.
+# Push a tag like v1.0.1 to publish a GitHub Release with the downloads attached;
+# run it by hand (Actions tab -> Release -> Run workflow) to just build and test.
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Check the tag matches package.json
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        run: |
+          version=$(node -p "require('./package.json').version")
+          if [ "v$version" != "$GITHUB_REF_NAME" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME doesn't match package.json version $version. Use 'npm version <x.y.z>' to bump both."
+            exit 1
+          fi
+
+      - run: npm ci
+
+      - run: npm run dist
+
+      - name: Keep the build (manual runs)
+        if: "!startsWith(github.ref, 'refs/tags/')"
+        uses: actions/upload-artifact@v4
+        with:
+          name: Drops
+          path: |
+            dist/Drops-Setup-*.exe
+            dist/Drops-*-portable.zip
+
+      - name: Publish the release
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            dist/Drops-Setup-*.exe \
+            dist/Drops-*-portable.zip \
+            --title "Drops $GITHUB_REF_NAME" \
+            --generate-notes

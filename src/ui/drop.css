@@ -1,0 +1,246 @@
+html, body {
+  height: 100%;
+  background: transparent;
+  overflow: hidden;
+  user-select: none;
+}
+
+/* The window is a little larger than the card so the shadow has room. */
+.card {
+  position: absolute;
+  top: 8px;
+  left: 10px;
+  right: 10px;
+  background: rgba(22, 24, 30, 0.96);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.34), 0 2px 6px rgba(0, 0, 0, 0.22);
+  overflow: hidden;
+  transition: border-color .15s, box-shadow .15s;
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 56px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 15%, transparent), transparent);
+  pointer-events: none;
+}
+
+.card.drag-over {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 30%, transparent), 0 10px 24px rgba(0, 0, 0, 0.34);
+}
+
+/* ---------------------------------------------------------------- header */
+
+.head {
+  position: relative;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 8px 0 10px;
+}
+.head:active:not(:has(button:active, input)) { background: rgba(255, 255, 255, 0.025); }
+.card.moving .head { cursor: grabbing; }
+
+.glyph {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  padding: 4px;
+  border-radius: 10px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-auto-rows: 13px;
+  gap: 2px;
+  background: color-mix(in srgb, var(--accent) 22%, rgba(255, 255, 255, 0.03));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 40%, transparent);
+}
+.glyph img, .glyph .fallback { width: 13px; height: 13px; object-fit: contain; }
+.glyph.is-single, .glyph.is-empty { place-items: center; grid-template-columns: 1fr; grid-auto-rows: auto; }
+.glyph.is-single img, .glyph.is-single .fallback { width: 24px; height: 24px; }
+.glyph.is-empty { color: color-mix(in srgb, var(--accent) 70%, white); }
+
+.titles { flex: 1; min-width: 0; }
+
+.name, .name-input {
+  font-family: "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif;
+  font-size: 14.5px;
+  font-weight: 600;
+  letter-spacing: 0.1px;
+}
+.name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.name-input {
+  display: block;
+  width: 100%;
+  margin: -2px 0 -1px -6px;
+  padding: 1px 5px;
+  color: var(--text);
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  outline: none;
+  user-select: text;
+}
+
+.meta {
+  margin-top: 1px;
+  font-size: 11.5px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.meta.error { color: var(--danger); }
+
+.icon-btn {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--muted);
+}
+.icon-btn:hover { background: var(--hover); color: var(--text); }
+
+.pin { opacity: 0; transition: opacity .15s; }
+.head:hover .pin, .pin.on { opacity: 1; }
+.pin.on { color: color-mix(in srgb, var(--accent) 80%, white); }
+.pin.on svg { fill: currentColor; }
+
+.chev {
+  flex: none;
+  width: 18px;
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+  transition: transform .22s var(--ease);
+}
+.card.expanded .chev { transform: rotate(180deg); }
+
+/* ---------------------------------------------------------------- list */
+
+.body {
+  height: 0;
+  overflow: hidden;
+  transition: height .2s var(--ease);
+}
+
+.inner {
+  padding: 6px;
+  border-top: 1px solid var(--line);
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.row {
+  position: relative;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 8px;
+  border-radius: 9px;
+}
+.row:hover { background: var(--hover); }
+.row:active { background: var(--press); }
+.row.dragging { opacity: 0.35; }
+
+.row .ico { flex: none; width: 28px; height: 28px; display: grid; place-items: center; }
+.row .ico img { width: 28px; height: 28px; object-fit: contain; }
+.row .label { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.row.missing .ico, .row.missing .label { opacity: 0.45; }
+.row.missing::after {
+  content: 'missing';
+  font-size: 10.5px;
+  color: var(--danger);
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: rgba(255, 138, 122, 0.12);
+}
+
+.row-input {
+  flex: 1;
+  min-width: 0;
+  font: inherit;
+  color: var(--text);
+  padding: 3px 6px;
+  margin-left: -7px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  outline: none;
+}
+
+.row.launching .ico { animation: pop .45s var(--ease); }
+@keyframes pop {
+  30% { transform: scale(0.8); }
+  70% { transform: scale(1.08); }
+}
+
+/* insertion marker while dragging */
+.row.insert-before::before,
+.row.insert-after::before {
+  content: '';
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--accent);
+  box-shadow: 0 0 6px var(--accent);
+}
+.row.insert-before::before { top: -1px; }
+.row.insert-after::before { bottom: -1px; }
+
+.empty {
+  height: 96px;
+  margin: 2px 0 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--muted);
+  border: 1.5px dashed rgba(255, 255, 255, 0.14);
+  border-radius: 10px;
+  transition: border-color .15s, background .15s, color .15s;
+}
+.card.drag-over .empty {
+  color: var(--text);
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+.add {
+  width: 100%;
+  height: 34px;
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  font-weight: 600;
+  color: color-mix(in srgb, var(--accent) 70%, white);
+}
+.add:hover { background: color-mix(in srgb, var(--accent) 15%, transparent); }
+.add:active { background: color-mix(in srgb, var(--accent) 22%, transparent); }

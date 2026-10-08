@@ -1,0 +1,63 @@
+{
+  "name": "drops",
+  "productName": "Drops",
+  "version": "1.0.0",
+  "description": "Desktop app organizer: drop apps into named Drops that open like a dropdown.",
+  "author": "PororoCodes",
+  "main": "src/main.js",
+  "private": true,
+  "scripts": {
+    "start": "node scripts/start.js",
+    "icons": "node scripts/make-icons.js",
+    "dist": "electron-builder --win --publish never"
+  },
+  "build": {
+    "appId": "app.drops.organizer",
+    "productName": "Drops",
+    "electronDist": "node_modules/electron/dist",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "src/**/*",
+      "assets/**/*",
+      "package.json"
+    ],
+    "win": {
+      "icon": "assets/icon.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "artifactName": "Drops-${version}-portable.${ext}"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "createDesktopShortcut": false,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Drops",
+      "runAfterFinish": true,
+      "include": "build/installer.nsh",
+      "installerIcon": "assets/icon.ico",
+      "uninstallerIcon": "assets/icon.ico",
+      "uninstallDisplayName": "Drops",
+      "artifactName": "Drops-Setup-${version}.${ext}"
+    }
+  },
+  "devDependencies": {
+    "electron": "^44.7.0",
+    "electron-builder": "^26.15.3"
+  }
+}
