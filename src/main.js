@@ -369,12 +369,14 @@ async function launch(drop, item) {
 
 // ------------------------------------------------------------------ tray & settings
 
+// Only the installed app touches the Windows startup entry: run from source it would
+// launch a bare electron.exe at login, and a custom data folder means a test profile.
+const ownsLoginItem = () => app.isPackaged && !process.env.DROPS_DATA_DIR;
+
+// Called on every launch too, so the entry follows Drops.exe if it moves or updates.
 function applyLoginItem() {
-  app.setLoginItemSettings({
-    openAtLogin: store.settings.openAtLogin,
-    path: process.execPath,
-    args: app.isPackaged ? [] : [app.getAppPath()],
-  });
+  if (!ownsLoginItem()) return;
+  app.setLoginItemSettings({ name: 'Drops', path: process.execPath, args: [], openAtLogin: store.settings.openAtLogin });
 }
 
 function setSetting(key, value) {
@@ -601,14 +603,15 @@ function registerIpc() {
 
 // ------------------------------------------------------------------ app lifecycle
 
-if (process.argv.includes('--restore-desktop')) {
+if (process.argv.includes('--uninstall-cleanup')) {
   // Run by the uninstaller (after it has closed Drops): put everything Drops took off
-  // the desktop back, so uninstalling never loses anyone's apps.
+  // the desktop back, so uninstalling never loses anyone's apps, and stop starting with Windows.
   app.whenReady().then(async () => {
     apps.init(app.getPath('userData'));
     store = new Store(path.join(app.getPath('userData'), 'drops.json'));
     await restoreAll();
     store.saveNow();
+    if (ownsLoginItem()) app.setLoginItemSettings({ name: 'Drops', path: process.execPath, args: [], openAtLogin: false });
     apps.dispose();
     app.exit(0);
   });
@@ -638,6 +641,13 @@ if (process.argv.includes('--restore-desktop')) {
       store.save();
       tidyEverything();
     }
+    // v3: Drops starts with Windows by default, so your Drops are there after a restart.
+    if (store.data.version < 3) {
+      store.data.version = 3;
+      store.settings.openAtLogin = true;
+      store.save();
+    }
+    applyLoginItem();
 
     tray = new Tray(ICON);
     tray.setToolTip('Drops');

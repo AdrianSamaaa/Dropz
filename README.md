@@ -57,7 +57,9 @@ Right-click the Drops icon in the system tray (click **^** next to the clock if 
 hidden) for: New Drop, Show all, Add apps to…, Keep Drops on top of windows, Remove apps
 from desktop when added, Start with Windows, and Quit.
 
-Your Drops are saved in `%APPDATA%\Drops\drops.json`.
+Drops starts with Windows, so your Drops are back after every restart (turn this off
+with **Start with Windows** in the tray menu). Everything is saved as you go in
+`%APPDATA%\Drops\drops.json`, with a backup copy in `drops.json.bak`.
 
 ## Building from source
 

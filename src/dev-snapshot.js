@@ -5,6 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');
 const apps = require('./apps');
+const { Store } = require('./store');
 
 const wait = ms => new Promise(r => setTimeout(r, ms));
 const isHidden = p => {
@@ -108,6 +109,19 @@ async function selfTest(ctx, dir, log) {
   execFileSync('powershell.exe', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', script], { windowsHide: true });
   fs.rmSync(script, { force: true });
   check('admin script handles quotes and accents', !fs.existsSync(awkward));
+
+  // a damaged save file falls back to the last good copy instead of starting empty
+  const storeFile = path.join(dir, 'store-test', 'drops.json');
+  fs.mkdirSync(path.dirname(storeFile), { recursive: true });
+  const first = new Store(storeFile);
+  first.data.drops.push({ id: 'keep', name: 'Keep me', items: [] });
+  first.saveNow();
+  new Store(storeFile); // a normal launch, which refreshes the backup
+  fs.writeFileSync(storeFile, '{ "drops": [ broken');
+  const recovered = new Store(storeFile);
+  check('damaged save falls back to backup', recovered.drops.some(d => d.name === 'Keep me') &&
+    fs.readdirSync(path.dirname(storeFile)).some(n => n.includes('.broken-')));
+  check('starts with Windows by default', ctx.store.settings.openAtLogin === true);
 
   await ctx.addPaths(drop, [shortcut, shortcut], null, false);
   check('duplicates ignored', drop.items.filter(i => i.originalPath === shortcut || i.path === shortcut).length === 1);

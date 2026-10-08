@@ -6,11 +6,11 @@ const crypto = require('crypto');
 const COLORS = ['#7c6cff', '#3fa9f5', '#2ec5a5', '#f5b83f', '#ff7a59', '#ff5fa2', '#a178ff', '#94a3b8'];
 
 const DEFAULTS = {
-  version: 2,
+  version: 3,
   settings: {
     alwaysOnTop: false,
     tidyDesktop: true, // apps added to a Drop leave the desktop
-    openAtLogin: false,
+    openAtLogin: true, // Drops come back after a restart
   },
   drops: [],
 };
@@ -24,13 +24,21 @@ class Store {
     this.data = this.load();
   }
 
+  // Loads drops.json, falling back to drops.json.bak (the last copy that loaded fine).
+  // A file that can't be read is set aside rather than overwritten by the next save.
   load() {
-    try {
-      const data = JSON.parse(fs.readFileSync(this.file, 'utf8'));
-      return { ...DEFAULTS, ...data, settings: { ...DEFAULTS.settings, ...data.settings } };
-    } catch {
-      return structuredClone(DEFAULTS);
+    for (const file of [this.file, this.file + '.bak']) {
+      let raw;
+      try { raw = fs.readFileSync(file, 'utf8'); } catch { continue; }
+      try {
+        const data = JSON.parse(raw);
+        if (file === this.file) fs.writeFileSync(this.file + '.bak', raw);
+        return { ...DEFAULTS, ...data, settings: { ...DEFAULTS.settings, ...data.settings } };
+      } catch {
+        try { fs.renameSync(file, `${file}.broken-${Date.now()}`); } catch { /* leave it */ }
+      }
     }
+    return structuredClone(DEFAULTS);
   }
 
   save() {
