@@ -9,6 +9,7 @@
   "scripts": {
     "start": "node scripts/start.js",
     "icons": "node scripts/make-icons.js",
+    "predist": "install-electron",
     "dist": "electron-builder --win --publish never"
   },
   "build": {
